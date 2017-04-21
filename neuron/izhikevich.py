@@ -84,7 +84,7 @@ class izhikevich:
      def generate_spike_train(self, thresold):
           for i in xrange(len(self.out)):
                if self.out[i] > thresold:
-                    self.spike_train.append(10)
+                    self.spike_train.append(1)
                else:
                     self.spike_train.append(0)
           return self.spike_train
