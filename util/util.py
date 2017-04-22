@@ -5,6 +5,17 @@ import math
 SPIKE_THRESHOLD = 35
 
 ################################################################################
+### Extract spike timings from spike train of 0's and 1's of single neuron
+################################################################################
+def extract_single_spike_time(spike_train, time, tau = 0.1):
+	steps = int(time / tau)
+	spike_time = []
+	for j in xrange(0,steps):
+		if(spikes[j] > 0):
+			spike_time.append(float(j) * tau) # convert index to timestamp
+	return spike_time
+
+################################################################################
 ### Extract spike timings from spike train of 0's and 1's
 ### Indices of 1's are convereted to spike time and returned as array of spikes
 ### Rows represents neurons and columns represents time stamps
