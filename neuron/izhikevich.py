@@ -82,6 +82,13 @@ class izhikevich:
      ### Return spike train of 0's and 1's according to specified threshold
      ######################################################################
      def generate_spike_train(self, thresold):
+          # if length of spike train and out is same,
+          # than no need to generate new spike train
+          if len(self.spike_train) == len(self.out):
+               return self.spike_train
+          else:
+               self.spike_train = []
+
           for i in xrange(len(self.out)):
                if self.out[i] > thresold:
                     self.spike_train.append(1)
