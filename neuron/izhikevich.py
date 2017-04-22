@@ -15,8 +15,8 @@ class izhikevich:
           self.d = 100.
           self.tau = 0.1            # time update factor DELTA_T
           self.u_0 = 0.             # recovery factor
-          self.ms                   # ms to run simputaion
-          self.steps                # number of steps to be n
+          self.ms = 0               # ms to run simputaion
+          self.steps = 0            # number of steps to be n
           self.spike_train = []     # array of 0's and 1's representing spike train
           self.out = []             # array of volatges after running simultion
           self.current_step = 0     # number of steps executed so far
