@@ -9,6 +9,7 @@ class izhikevich:
           self.v_th = -40.
           self.v_peak = 35.
           self.C = 100.
+          self.K = 0.7
           self.a = 0.03
           self.b = -2.
           self.c = -50.
@@ -37,7 +38,7 @@ class izhikevich:
                self.steps = len(i_inj) # run the simulation for array length, don't throw exception
 
           for i in xrange(self.ms):
-               self.v = self.v + (self.tau * ((self.v-self.v_rest)*(self.v-self.v_th) + -self.u + (i_inj))/self.C)
+               self.v = self.v + (self.tau * (self.K * (self.v-self.v_rest)*(self.v-self.v_th) + -self.u + (i_inj))/self.C)
 
                self.u = self.u + (self.tau * self.a*(self.b*(self.v-self.v_rest) - self.u))
                self.out.append(self.v)
@@ -54,7 +55,7 @@ class izhikevich:
      #################################################################################
      def input_snn_one_step(self, i_inj):
           
-          self.v = self.v + (self.tau * ((self.v-self.v_rest)*(self.v-self.v_th) + -self.u + (i_inj))/self.C)
+          self.v = self.v + (self.tau * (self.K * (self.v-self.v_rest)*(self.v-self.v_th) + -self.u + (i_inj))/self.C)
 
           self.u = self.u + (self.tau * self.a*(self.b*(self.v-self.v_rest) - self.u))
           self.out.append(self.v)
@@ -88,7 +89,6 @@ class izhikevich:
                return self.spike_train
           else:
                self.spike_train = []
-
           for i in xrange(len(self.out)):
                if self.out[i] > thresold:
                     self.spike_train.append(1)
