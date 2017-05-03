@@ -1,0 +1,31 @@
+prev constant volatage
+
+
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+PREPARE LEARNING.PY FOR TIME AT T CODE,
+NEXT PRE SPIKE IS 100MS IF WE HAVE NO SPIKE AFTER THIS
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+1.	Initalise weights with seed
+
+2.	Generate mfcc
+
+3.	Provide mfccs to y layer and generate injected current
+
+4.	for all the training samples do:
+
+		step by step calcualte conductance at time t and calcualte synaptic current 
+		if spikes in z layer than apply learning and update weights
+		normalise weights
+
+	continue
+
+5.	generate average wave and signature spike train
+
+6.	check accuracy of the method
+
+
+tweak  A, B, TAU_PLUS, TAU_MINUS, TIME_WINDOW to see accuracy

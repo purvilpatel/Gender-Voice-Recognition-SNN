@@ -2,6 +2,7 @@ from izhikevich_original import izhikevich as neuron
 import util
 
 import matplotlib.pyplot as plt
+import scipy.io.wavfile as wavfile
 import sys
 import math
 import random
@@ -33,13 +34,11 @@ def get_prev_spike(spike_time_array, time_stamp):
 	if time_stamp >= spike_time_array[len(spike_time_array)-1]:
 		return spike_time_array[-1]
 
-
 	for i in xrange(1,len(spike_time_array)):
 		if spike_time_array[i] > time_stamp:
 			return spike_time_array[i-1]
 
 
-"""
 ############################################################################
 ### for given spike time array find what is the next pre synaptic spike time
 ### spike_time : array of pre synaptic spike times
@@ -48,17 +47,20 @@ def get_prev_spike(spike_time_array, time_stamp):
 ###    return SPECIAL_CASE = -999 to indicate this special case
 ############################################################################
 def get_next_spike(spike_time_array, time_stamp):	
-	if time_stamp >= spike_time_array[len(spike_time_array)-1]:
-		return spike_time_array[-1]
+	# if post synaptic spike after last pre synaptic spike return 100ms
+	if time_stamp > spike_time_array[-1]:
+		return 100
 
+	# if post synaptic spike before first pre synaptic spike return first syanptic spike
 	if time_stamp < spike_time_array[0]:
-		return SPECIAL_CASE
+		return spike_time_array[0]
 
-	for i in xrange(1,len(spike_time_array)):
-		if spike_time_array[i] > time_stamp:
-			return spike_time_array[i-1]
+	for i in xrange(len(spike_time_array) - 1, -1, -1):
+		if spike_time_array[i] <= time_stamp:
+			if i == len(spike_time_array) - 1:
+				return spike_time_array[i]
+			return spike_time_array[i + 1]
 
-"""
 
 ##########################################################################
 ### Implementaion of Hebbian learning Rule
@@ -68,22 +70,25 @@ def get_next_spike(spike_time_array, time_stamp):
 ##########################################################################
 def synapse_learning(pre_synaptic_spike_time_array, post_synaptic_spike_time, weight):
 	global special_count, increase_count, decrease_count
-	# get pre synaptic time for given time. see "get_prev_spike" for more info
-	pre_synaptic_spike_time = get_prev_spike(pre_synaptic_spike_time_array, post_synaptic_spike_time)
+
+	# get previous pre synaptic time for given time. see "get_prev_spike" for more info
+	prev_pre_synaptic_spike_time = get_prev_spike(pre_synaptic_spike_time_array, post_synaptic_spike_time)
+	# get next pre synaptic time for given time. see "get_prev_spike" for more info
+	next_pre_synaptic_spike_time = get_next_spike(pre_synaptic_spike_time_array, post_synaptic_spike_time)
 
 	# if special case than decrease weight as post spike happened before pre spike
-	if(pre_synaptic_spike_time == SPECIAL_CASE):
+	if(prev_pre_synaptic_spike_time == SPECIAL_CASE):
 		special_count = special_count + 1
-		return decrease_weight(pre_synaptic_spike_time, post_synaptic_spike_time, weight)
+		return decrease_weight(next_pre_synaptic_spike_time, post_synaptic_spike_time, weight)
 
-	# if post spike happened within TIME_WINDOW of pre spike, increase weight
-	if(post_synaptic_spike_time - pre_synaptic_spike_time >= TIME_WINDOW ):
+	# if post spike fired within TIME_WINDOW of pre spike, increase weight
+	if(post_synaptic_spike_time - prev_pre_synaptic_spike_time <= TIME_WINDOW ):
 		increase_count = increase_count + 1
-		return increase_weight(pre_synaptic_spike_time, post_synaptic_spike_time, weight)
+		return increase_weight(prev_pre_synaptic_spike_time, post_synaptic_spike_time, weight)
 	# if post spike happened outside TIME_WINDOW of pre spike, decrease weight
 	else:
 		decrease_count = decrease_count + 1
-		return decrease_weight(pre_synaptic_spike_time, post_synaptic_spike_time, weight)
+		return decrease_weight(next_pre_synaptic_spike_time, post_synaptic_spike_time, weight)
 
 
 ##########################################################################
@@ -94,22 +99,25 @@ def synapse_learning(pre_synaptic_spike_time_array, post_synaptic_spike_time, we
 ##########################################################################
 def inverese_synapse_learning(pre_synaptic_spike_time_array, post_synaptic_spike_time, weight):
 	global special_count, increase_count, decrease_count
-	# get pre synaptic time for given time. see "get_prev_spike" for more info
-	pre_synaptic_spike_time = get_prev_spike(pre_synaptic_spike_time_array, post_synaptic_spike_time)
+	
+	# get previous pre synaptic time for given time. see "get_prev_spike" for more info
+	prev_pre_synaptic_spike_time = get_prev_spike(pre_synaptic_spike_time_array, post_synaptic_spike_time)
+	# get next pre synaptic time for given time. see "get_prev_spike" for more info
+	next_pre_synaptic_spike_time = get_next_spike(pre_synaptic_spike_time_array, post_synaptic_spike_time)
 
 	# if special case than increase weight as post spike happened before pre spike
-	if(pre_synaptic_spike_time == SPECIAL_CASE):
+	if(prev_pre_synaptic_spike_time == SPECIAL_CASE):
 		special_count = special_count + 1
-		return increase_weight(pre_synaptic_spike_time, post_synaptic_spike_time, weight)
+		return increase_weight(prev_pre_synaptic_spike_time, post_synaptic_spike_time, weight)
 
 	# if post spike happened within TIME_WINDOW of pre spike, decrease weight
-	if(post_synaptic_spike_time - pre_synaptic_spike_time >= TIME_WINDOW ):
+	if(post_synaptic_spike_time - prev_pre_synaptic_spike_time <= TIME_WINDOW ):
 		increase_count = increase_count + 1
-		return decrease_weight(pre_synaptic_spike_time, post_synaptic_spike_time, weight)
+		return decrease_weight(next_pre_synaptic_spike_time, post_synaptic_spike_time, weight)
 	# if post spike happened outside TIME_WINDOW of pre spike, increase weight
 	else:
 		decrease_count = decrease_count + 1
-		return increase_weight(pre_synaptic_spike_time, post_synaptic_spike_time, weight)
+		return increase_weight(prev_pre_synaptic_spike_time, post_synaptic_spike_time, weight)
 
 
 ##########################################################################
@@ -130,7 +138,7 @@ def increase_weight(pre_synaptic_spike_time, post_synaptic_spike_time, weight):
 ### weight : synaptic weight
 ##########################################################################
 def decrease_weight(pre_synaptic_spike_time, post_synaptic_spike_time, weight):
-	delta_w = 0.01 * B * math.exp( - (abs(post_synaptic_spike_time - pre_synaptic_spike_time) / TAU_PLUS))
+	delta_w = 0.01 * B * math.exp( - (abs(pre_synaptic_spike_time - post_synaptic_spike_time) / TAU_PLUS))
 	return (weight + (delta_w * weight))
 
 
@@ -161,7 +169,7 @@ def initialize_weight(no_synapse):
 
 	return weights
 
-
+"""
 layer_size = 1
 input_layer = []
 output = neuron()
@@ -214,7 +222,7 @@ for l in xrange(1,10000):
 
 	additive_neuron = util.additive_synaptic_current(steps, all_weighted_conductance, additive_neuron)
 	additive_neuron_spikes = additive_neuron.generate_spike_train(util.SPIKE_THRESHOLD)
-	"""
+	
 	plt.figure()
 	plt.subplot(211)
 	plt.title("Spike Coding C weight : " + str(weights) + " ---- " + str(l))
@@ -223,7 +231,7 @@ for l in xrange(1,10000):
 	plt.subplot(212)
 	plt.plot(additive_neuron_spikes)
 	plt.title("Spike Train C, # spikes : " + str(additive_neuron_spikes.count(1)))
-	"""
+	
 	temp_spike_time = []
 	for i in xrange(0,steps):
 		if(additive_neuron_spikes[i] > 0):
@@ -247,3 +255,5 @@ plt.title("Spike Train C, # spikes : " + str(additive_neuron_spikes.count(1)))
 print increase_count, decrease_count, special_count, weights[0]
 
 plt.show()'''
+
+"""
